@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><title>BrowserStack Run Status</title></head>
+<body>
+  <h2>Cross-Browser Execution Status</h2>
+  <table border="1" id="statusTable">
+    <thead><tr><th>Session</th><th>Status</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    async function poll() {
+      const res = await fetch("/status");
+      const data = await res.json();
+      const tbody = document.querySelector("#statusTable tbody");
+      tbody.innerHTML = "";
+      for (const [key, val] of Object.entries(data)) {
+        tbody.innerHTML += `<tr><td>${key}</td><td>${val}</td></tr>`;
+      }
+    }
+    setInterval(poll, 2000);
+    poll();
+  </script>
+</body>
+</html>
