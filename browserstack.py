@@ -47,18 +47,20 @@ def run_on_config(config):
                 pass
 
 def run_all():
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = {executor.submit(run_on_config, config): config for config in CONFIGS}
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {}
+        for config in CONFIGS:
+            futures[executor.submit(run_on_config, config)] = config
+            time.sleep(3)
+
         for future, config in futures.items():
             name = config["bstack:options"]["sessionName"]
             try:
-                future.result(timeout=90)
+                future.result(timeout=120)
             except FutureTimeoutError:
-                set_status(name, "failed: timed out after 90s")
+                set_status(name, "failed: timed out after 120s")
 
-from status import get_status
+# from status import get_status
 
 if __name__ == "__main__":
-    print("Testing single config only...")
-    run_on_config(CONFIGS[0])
-    print(get_status())
+    run_all()
