@@ -28,9 +28,19 @@ After I moved from local scraping to running the same logic on BrowserStack, I r
 
 ## Final notes
 
-in the end, the concurrency instability wasn't fully a code problem. After tuning worker count, buffer size, and stagger timing and still seeing every run fail with "Automate testing time expired", I checked my plan usage and found the free Automate trial's 100 minutes were used up from all the earlier debugging runs. So i created another trial account, added the new credentials into .env, and the same code ran with 5/5 passed on the first real attempt.
+in the end, the concurrency instability wasn't a code problem. After tuning worker count, buffer size, and stagger timing and still seeing failing every run cause of "Automate testing time expired", I checked my plan usage and found the free Automate trial's 100 minutes were used up from all the earlier debugging runs. So i created another trial account, added the new credentials into .env, and the same code ran with 5/5 passed on the first attempt.
 
 
 ## Discards
 
 I'd created a static/index.html file to have a dashboard with a html table, but seemed of no use so had to discard that
+
+## Last minute fixes
+
+A couple of things didn't work for me when I check the Automation logs:
+
+- The dashboard.py file had `app.mount("/", StaticFiles(directory="static", html=True), name="static")` after I discarded the static/ folder so got rid of that.
+
+- BrowserStack was marking every session as CLIENT_STOPPED_SESSION even on runs where the script completed all 5 locally. I was at fault because out my code didnt tell BrowserStack a session had passed, it was only tracking pass/fail in its own local dict so I called setSessionStatus executor before quit().
+
+After both fixes, i ran it again and it gave a  5/5 on all sessions, all showing passed dashboard with durations and the reason text

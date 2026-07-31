@@ -1,5 +1,6 @@
 import os
 import time
+import json
 from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -23,6 +24,13 @@ CONFIGS = [
     {"browserName": "Safari", "bstack:options": {"deviceName": "iPhone 14", "realMobile": "true", "sessionName": "safari-ios"}},
 ]
 
+def mark_bs_status(driver, status, reason):
+    try:
+        payload = json.dumps({"action": "setSessionStatus", "arguments": {"status": status, "reason": reason[:250]}})
+        driver.execute_script(f"browserstack_executor: {payload}")
+    except Exception:
+        pass
+
 def run_on_config(config):
     name = config["bstack:options"]["sessionName"]
     set_status(name, "running")
@@ -36,8 +44,11 @@ def run_on_config(config):
     try:
         driver = webdriver.Remote(command_executor=BS_URL, options=options)
         scrape_opinion_articles(driver, limit=1, save_images=False, url_buffer=10)
+        mark_bs_status(driver, "passed", "Article scraped and translated successfully")
         set_status(name, "passed")
     except Exception as e:
+        if driver:
+            mark_bs_status(driver, "failed", str(e))
         set_status(name, f"failed: {e}")
     finally:
         if driver:
@@ -59,8 +70,6 @@ def run_all():
                 future.result(timeout=120)
             except FutureTimeoutError:
                 set_status(name, "failed: timed out after 120s")
-
-# from status import get_status
 
 if __name__ == "__main__":
     run_all()
